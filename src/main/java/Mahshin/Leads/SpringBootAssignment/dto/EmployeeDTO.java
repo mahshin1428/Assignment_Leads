@@ -37,7 +37,4 @@ public class EmployeeDTO {
     @NotNull(message = "Bank account is required")
     private BankAccountDTO bankAccount;
 
-    public BankAccountDTO getBankAccount() {
-        return null;
-    }
 }

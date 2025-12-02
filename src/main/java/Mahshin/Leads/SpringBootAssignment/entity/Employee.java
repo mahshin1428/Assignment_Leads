@@ -1,6 +1,7 @@
 package Mahshin.Leads.SpringBootAssignment.entity;
 import Mahshin.Leads.SpringBootAssignment.entity.AccountType;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -40,7 +41,10 @@ public class Employee {
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "id", referencedColumnName = "id")
+    @JsonManagedReference // This tells Jackson: serialize this side normally
     private BankAccount bankAccount;
+
+
 
     @Transient
     private Double basicSalary;

@@ -32,6 +32,4 @@ public class CompanyAccount {
     @Column(nullable = false)
     private String branchName;
 
-    public void getClass(Double balance) {
-    }
 }

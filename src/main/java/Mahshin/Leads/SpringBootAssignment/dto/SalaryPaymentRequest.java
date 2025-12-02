@@ -1,6 +1,5 @@
 package Mahshin.Leads.SpringBootAssignment.dto;
 
-
 import lombok.*;
 import java.util.List;
 
@@ -10,4 +9,5 @@ import java.util.List;
 @Builder
 public class SalaryPaymentRequest {
     private Double additionalFunds;
+    private List<Long> employeeIds;
 }

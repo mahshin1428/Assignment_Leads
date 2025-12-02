@@ -1,6 +1,5 @@
 package Mahshin.Leads.SpringBootAssignment.service;
 
-
 import Mahshin.Leads.SpringBootAssignment.dto.SalaryPaymentRequest;
 import Mahshin.Leads.SpringBootAssignment.dto.SalaryPaymentResponse;
 import Mahshin.Leads.SpringBootAssignment.dto.SalarySheetDTO;
@@ -27,6 +26,9 @@ public class SalaryService {
     private final CompanyAccountRepository companyAccountRepository;
     private final SalaryConfigurationRepository salaryConfigRepository;
 
+
+    // CALCULATE SALARY SHEET FOR ALL EMPLOYEES
+
     public List<SalarySheetDTO> calculateSalaries() {
         SalaryConfiguration config = salaryConfigRepository.findAll().stream()
                 .findFirst()
@@ -46,55 +48,53 @@ public class SalaryService {
             employee.setMedicalAllowance(medicalAllowance);
             employee.setTotalSalary(totalSalary);
 
-            SalarySheetDTO dto = SalarySheetDTO.builder()
-                    .employeeId(employee.getEmployeeId())
-                    .employeeName(employee.getName())
-                    .grade(employee.getGrade())
-                    .basicSalary(basicSalary)
-                    .houseRent(houseRent)
-                    .medicalAllowance(medicalAllowance)
-                    .totalSalary(totalSalary)
-                    .build();
-
-            salarySheet.add(dto);
+            salarySheet.add(
+                    SalarySheetDTO.builder()
+                            .employeeId(employee.getEmployeeId())
+                            .employeeName(employee.getName())
+                            .grade(employee.getGrade())
+                            .basicSalary(basicSalary)
+                            .houseRent(houseRent)
+                            .medicalAllowance(medicalAllowance)
+                            .totalSalary(totalSalary)
+                            .build()
+            );
         }
 
         return salarySheet;
     }
 
+
+    // PAY SALARIES TO ALL EMPLOYEES
+
     @Transactional
     public SalaryPaymentResponse processSalaryPayment(SalaryPaymentRequest request) {
-        CompanyAccount companyAccount = companyAccountRepository.findAll().stream()
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Company account not found"));
 
-        if (request.getAdditionalFunds() != null && request.getAdditionalFunds() > 0) {
-            companyAccount.setBalance(companyAccount.getBalance() + request.getAdditionalFunds());
-            companyAccountRepository.save(companyAccount);
-        }
+        CompanyAccount companyAccount = getCompanyAccount();
 
+        // Add extra funds if provided
+        addAdditionalFunds(companyAccount, request);
+
+        // Calculate total required
         List<SalarySheetDTO> salarySheet = calculateSalaries();
-        double totalSalaryRequired = salarySheet.stream()
+        double totalRequired = salarySheet.stream()
                 .mapToDouble(SalarySheetDTO::getTotalSalary)
                 .sum();
 
-        if (companyAccount.getBalance() < totalSalaryRequired) {
-            throw new InsufficientBalanceException(
-                    "Insufficient balance. Required: " + totalSalaryRequired +
-                            ", Available: " + companyAccount.getBalance()
-            );
-        }
+        // Validate balance
+        checkBalance(companyAccount, totalRequired);
 
+        // Transfer money to each employee
         List<Employee> employees = employeeRepository.findAllByOrderByGradeAsc();
         for (int i = 0; i < employees.size(); i++) {
-            Employee employee = employees.get(i);
-            SalarySheetDTO salary = salarySheet.get(i);
+            Employee emp = employees.get(i);
+            SalarySheetDTO sal = salarySheet.get(i);
 
-            employee.getBankAccount().setCurrentBalance(
-                    employee.getBankAccount().getCurrentBalance() + salary.getTotalSalary()
+            emp.getBankAccount().setCurrentBalance(
+                    emp.getBankAccount().getCurrentBalance() + sal.getTotalSalary()
             );
 
-            companyAccount.setBalance(companyAccount.getBalance() - salary.getTotalSalary());
+            companyAccount.setBalance(companyAccount.getBalance() - sal.getTotalSalary());
         }
 
         employeeRepository.saveAll(employees);
@@ -102,17 +102,90 @@ public class SalaryService {
 
         return SalaryPaymentResponse.builder()
                 .success(true)
-                .totalSalaryPaid(totalSalaryRequired)
+                .totalSalaryPaid(totalRequired)
                 .remainingCompanyBalance(companyAccount.getBalance())
                 .salarySheet(salarySheet)
                 .build();
     }
 
-    private double calculateBasicSalary(Integer grade, SalaryConfiguration config) {
-        double lowestSalary = config.getLowestGradeBasicSalary();
-        double increment = config.getGradeIncrement();
+    // PAY SALARY TO SELECTED EMPLOYEES ONLY
 
-        // Grade 6 is the lowest, so we calculate backwards
-        return lowestSalary + ((6 - grade) * increment);
+    @Transactional
+    public SalaryPaymentResponse processSelectedPayments(SalaryPaymentRequest request) {
+
+        if (request.getEmployeeIds() == null || request.getEmployeeIds().isEmpty()) {
+            throw new IllegalArgumentException("Employee list cannot be empty");
+        }
+
+        CompanyAccount companyAccount = getCompanyAccount();
+
+        // Add extra funds if provided
+        addAdditionalFunds(companyAccount, request);
+
+        // Calculate salaries for all employees
+        List<SalarySheetDTO> allSalaries = calculateSalaries();
+
+        // Filter selected employees
+        List<SalarySheetDTO> selectedSalaries = allSalaries.stream()
+                .filter(s -> request.getEmployeeIds().contains(s.getEmployeeId()))
+                .toList();
+
+        double totalRequired = selectedSalaries.stream()
+                .mapToDouble(SalarySheetDTO::getTotalSalary)
+                .sum();
+
+        checkBalance(companyAccount, totalRequired);
+
+        // Pay selected employees
+        for (SalarySheetDTO sal : selectedSalaries) {
+            Employee emp = employeeRepository.findById(sal.getEmployeeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
+
+            emp.getBankAccount().setCurrentBalance(
+                    emp.getBankAccount().getCurrentBalance() + sal.getTotalSalary()
+            );
+
+            companyAccount.setBalance(companyAccount.getBalance() - sal.getTotalSalary());
+
+            employeeRepository.save(emp);
+        }
+
+        companyAccountRepository.save(companyAccount);
+
+        return SalaryPaymentResponse.builder()
+                .success(true)
+                .totalSalaryPaid(totalRequired)
+                .remainingCompanyBalance(companyAccount.getBalance())
+                .salarySheet(selectedSalaries)
+                .build();
+    }
+
+
+    // HELPER METHODS
+    private CompanyAccount getCompanyAccount() {
+        return companyAccountRepository.findAll().stream()
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Company account not found"));
+    }
+
+    private void addAdditionalFunds(CompanyAccount account, SalaryPaymentRequest request) {
+        if (request.getAdditionalFunds() != null && request.getAdditionalFunds() > 0) {
+            account.setBalance(account.getBalance() + request.getAdditionalFunds());
+            companyAccountRepository.save(account);
+        }
+    }
+
+    private void checkBalance(CompanyAccount account, double required) {
+        if (account.getBalance() < required) {
+            throw new InsufficientBalanceException(
+                    "Insufficient balance. Required: " + required +
+                            ", Available: " + account.getBalance()
+            );
+        }
+    }
+
+    private double calculateBasicSalary(Integer grade, SalaryConfiguration config) {
+        return config.getLowestGradeBasicSalary() +
+                ((6 - grade) * config.getGradeIncrement());
     }
 }

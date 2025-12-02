@@ -1,6 +1,5 @@
 package Mahshin.Leads.SpringBootAssignment.dto;
 
-
 import lombok.*;
 import java.util.List;
 

@@ -2,6 +2,7 @@ package Mahshin.Leads.SpringBootAssignment.entity;
 import Mahshin.Leads.SpringBootAssignment.entity.AccountType;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
@@ -43,6 +44,9 @@ public class BankAccount {
     private String branchName;
 
     @OneToOne(mappedBy = "bankAccount")
+    @JsonBackReference
     private Employee employee;
+
+
 }
 

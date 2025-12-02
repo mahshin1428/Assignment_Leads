@@ -10,25 +10,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class CompanyAccountService {
 
     private final CompanyAccountRepository companyAccountRepository;
 
+    // Create a new company account
     @Transactional
-    public CompanyAccount createOrUpdateCompanyAccount(CompanyAccountDTO dto) {
-        List<CompanyAccount> accounts = companyAccountRepository.findAll();
-
-        CompanyAccount companyAccount;
-        if (accounts.isEmpty()) {
-            companyAccount = new CompanyAccount();
-        } else {
-            companyAccount = accounts.get(0);
-        }
-
-        companyAccount.getClass(dto.getBalance());
+    public CompanyAccount createCompanyAccount(CompanyAccountDTO dto) {
+        CompanyAccount companyAccount = new CompanyAccount();
+        companyAccount.setBalance(dto.getBalance());
         companyAccount.setAccountName(dto.getAccountName());
         companyAccount.setAccountNumber(dto.getAccountNumber());
         companyAccount.setBankName(dto.getBankName());
@@ -37,16 +29,36 @@ public class CompanyAccountService {
         return companyAccountRepository.save(companyAccount);
     }
 
-    public CompanyAccount getCompanyAccount() {
-        return companyAccountRepository.findAll().stream()
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Company account not found"));
+    // Get all company accounts
+    public List<CompanyAccount> getAllCompanyAccounts() {
+        List<CompanyAccount> accounts = companyAccountRepository.findAll();
+        if (accounts.isEmpty()) {
+            throw new ResourceNotFoundException("No company accounts found");
+        }
+        return accounts;
     }
 
+    // Get a single company account by ID
+    public CompanyAccount getCompanyAccountById(Long id) {
+        return companyAccountRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Company account not found with id: " + id));
+    }
+
+    // Add funds to a specific company account
     @Transactional
-    public CompanyAccount addFunds(Double amount) {
-        CompanyAccount account = getCompanyAccount();
-        account.setBalance(account.getBalance() + amount);
+    public CompanyAccount addFunds(Long id, Double amount) {
+        // Find the account by ID
+        CompanyAccount account = getCompanyAccountById(id);
+
+        // Update the balance
+        if (amount != null && amount > 0) {
+            account.setBalance(account.getBalance() + amount);
+        } else {
+            throw new IllegalArgumentException("Amount must be positive and not null");
+        }
+
+        // Save and return
         return companyAccountRepository.save(account);
     }
+
 }
