@@ -21,11 +21,6 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final BankAccountRepository bankAccountRepository;
 
-    public EmployeeService(EmployeeRepository employeeRepository, BankAccountRepository bankAccountRepository) {
-        this.employeeRepository = employeeRepository;
-        this.bankAccountRepository = bankAccountRepository;
-    }
-
     @Transactional
     public Employee createEmployee(EmployeeDTO dto) {
         // Validate employee ID

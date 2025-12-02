@@ -1,6 +1,7 @@
 package Mahshin.Leads.SpringBootAssignment.service;
 
 
+import Mahshin.Leads.SpringBootAssignment.dto.SalaryPaymentRequest;
 import Mahshin.Leads.SpringBootAssignment.dto.SalaryPaymentResponse;
 import Mahshin.Leads.SpringBootAssignment.dto.SalarySheetDTO;
 import Mahshin.Leads.SpringBootAssignment.entity.CompanyAccount;

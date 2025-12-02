@@ -1,7 +1,7 @@
 package Mahshin.Leads.SpringBootAssignment.entity;
 
 import jakarta.persistence.*;
-//import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 @Entity

@@ -15,10 +15,6 @@ public class SalaryConfigurationService {
 
     private final SalaryConfigurationRepository salaryConfigRepository;
 
-    public SalaryConfigurationService(SalaryConfigurationRepository salaryConfigRepository) {
-        this.salaryConfigRepository = salaryConfigRepository;
-    }
-
     @Transactional
     public SalaryConfiguration createOrUpdateConfiguration(SalaryConfigurationDTO dto) {
         List<SalaryConfiguration> configs = salaryConfigRepository.findAll();

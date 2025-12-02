@@ -1,4 +1,6 @@
 package Mahshin.Leads.SpringBootAssignment.entity;
+import Mahshin.Leads.SpringBootAssignment.entity.AccountType;
+
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
@@ -44,7 +46,3 @@ public class BankAccount {
     private Employee employee;
 }
 
-enum AccountType {
-    SAVINGS,
-    CURRENT
-}

@@ -1,6 +1,7 @@
 package Mahshin.Leads.SpringBootAssignment.dto;
 
 
+import Mahshin.Leads.SpringBootAssignment.entity.AccountType;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -13,9 +14,11 @@ public class BankAccountDTO {
     @NotNull(message = "Account type is required")
     private AccountType accountType;
 
+    @Getter
     @NotBlank(message = "Account name is required")
     private String accountName;
 
+    @Getter
     @NotBlank(message = "Account number is required")
     private String accountNumber;
 
@@ -28,15 +31,6 @@ public class BankAccountDTO {
 
     @NotBlank(message = "Branch name is required")
     private String branchName;
-
-
-    public String getAccountName() {
-        return accountName;
-    }
-
-    public String getAccountNumber() {
-        return accountNumber;
-    }
 
 
 }

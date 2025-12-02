@@ -19,10 +19,6 @@ public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    public EmployeeController(EmployeeService employeeService) {
-        this.employeeService = employeeService;
-    }
-
     @PostMapping
     public ResponseEntity<Employee> createEmployee(@Valid @RequestBody EmployeeDTO dto) {
         Employee employee = employeeService.createEmployee(dto);

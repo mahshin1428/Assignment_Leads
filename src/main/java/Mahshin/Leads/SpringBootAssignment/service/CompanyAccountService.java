@@ -17,10 +17,6 @@ public class CompanyAccountService {
 
     private final CompanyAccountRepository companyAccountRepository;
 
-    public CompanyAccountService(CompanyAccountRepository companyAccountRepository) {
-        this.companyAccountRepository = companyAccountRepository;
-    }
-
     @Transactional
     public CompanyAccount createOrUpdateCompanyAccount(CompanyAccountDTO dto) {
         List<CompanyAccount> accounts = companyAccountRepository.findAll();
@@ -32,7 +28,7 @@ public class CompanyAccountService {
             companyAccount = accounts.get(0);
         }
 
-        companyAccount.setBalance(dto.getBalance());
+        companyAccount.getClass(dto.getBalance());
         companyAccount.setAccountName(dto.getAccountName());
         companyAccount.setAccountNumber(dto.getAccountNumber());
         companyAccount.setBankName(dto.getBankName());

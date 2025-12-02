@@ -1,13 +1,16 @@
 package Mahshin.Leads.SpringBootAssignment.entity;
+import Mahshin.Leads.SpringBootAssignment.entity.AccountType;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+@Getter
+@Setter
 @Entity
 @Table(name = "employees")
-@Data
-@NoArgsConstructor
+
+@NoArgsConstructor //create an employee object by jackson
 @AllArgsConstructor
 @Builder
 public class Employee {
@@ -36,7 +39,7 @@ public class Employee {
     private String mobileNumber;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "bank_account_id", referencedColumnName = "id")
+    @JoinColumn(name = "id", referencedColumnName = "id")
     private BankAccount bankAccount;
 
     @Transient
@@ -50,4 +53,6 @@ public class Employee {
 
     @Transient
     private Double totalSalary;
+
+
 }
