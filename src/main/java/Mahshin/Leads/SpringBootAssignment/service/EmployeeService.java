@@ -6,8 +6,8 @@ import Mahshin.Leads.SpringBootAssignment.entity.BankAccount;
 import Mahshin.Leads.SpringBootAssignment.entity.Employee;
 import Mahshin.Leads.SpringBootAssignment.exception.ResourceNotFoundException;
 import Mahshin.Leads.SpringBootAssignment.exception.ValidationException;
-import Mahshin.Leads.SpringBootAssignment.repository.plsql.EmployeeProcedureRepository;
-import Mahshin.Leads.SpringBootAssignment.repository.plsql.EmployeeProcedureRepository.ProcedureResult;
+import Mahshin.Leads.SpringBootAssignment.repository.BankAccountRepository;
+import Mahshin.Leads.SpringBootAssignment.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,7 +18,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmployeeService {
 
-    private final EmployeeProcedureRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
+    private final BankAccountRepository bankAccountRepository;
 
     @Transactional
     public Employee createEmployee(EmployeeDTO dto) {
@@ -27,8 +28,13 @@ public class EmployeeService {
             throw new ValidationException("Employee ID already exists");
         }
 
-        // Validate grade constraints (done in stored procedure as well)
+        // Validate grade constraints
         validateGradeConstraints(dto.getGrade());
+
+        // Validate account number
+        if (bankAccountRepository.existsByAccountNumber(dto.getBankAccount().getAccountNumber())) {
+            throw new ValidationException("Bank account number already exists");
+        }
 
         BankAccount bankAccount = BankAccount.builder()
                 .accountType(dto.getBankAccount().getAccountType())
@@ -50,16 +56,7 @@ public class EmployeeService {
 
         bankAccount.setEmployee(employee);
 
-        // Call stored procedure
-        ProcedureResult result = employeeRepository.createEmployee(employee);
-
-        if (!result.isSuccess()) {
-            throw new ValidationException(result.getMessage());
-        }
-
-        // Return the created employee by fetching from database
-        return employeeRepository.findByEmployeeId(dto.getEmployeeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found after creation"));
+        return employeeRepository.save(employee);
     }
 
     public List<Employee> getAllEmployees() {
@@ -92,30 +89,13 @@ public class EmployeeService {
         bankAccount.setBankName(dto.getBankAccount().getBankName());
         bankAccount.setBranchName(dto.getBankAccount().getBranchName());
 
-        // Call stored procedure
-        ProcedureResult result = employeeRepository.updateEmployee(employee);
-
-        if (!result.isSuccess()) {
-            throw new ValidationException(result.getMessage());
-        }
-
-        // Return the updated employee by fetching from database
-        return employeeRepository.findByEmployeeId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee not found after update"));
+        return employeeRepository.save(employee);
     }
 
     @Transactional
     public void deleteEmployee(String id) {
-        // Call stored procedure
-        ProcedureResult result = employeeRepository.deleteEmployee(id);
-
-        if (!result.isSuccess()) {
-            if (result.getResultCode() == -1) {
-                throw new ResourceNotFoundException("Employee not found with ID: " + id);
-            } else {
-                throw new ValidationException(result.getMessage());
-            }
-        }
+        Employee employee = getEmployeeById(id);
+        employeeRepository.delete(employee);
     }
 
     private void validateGradeConstraints(Integer grade) {
@@ -128,3 +108,4 @@ public class EmployeeService {
         }
     }
 }
+
