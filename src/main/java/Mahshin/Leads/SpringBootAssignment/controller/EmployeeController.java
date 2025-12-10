@@ -11,15 +11,18 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
+
+
 @RestController
-@RequestMapping("/api/employees")
+@RequestMapping("/api/employees/")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class EmployeeController {
 
     private final EmployeeService employeeService;
 
-    @PostMapping
+    @PostMapping(path = "createEmployee")
     public ResponseEntity<Employee> createEmployee(@Valid @RequestBody EmployeeDTO dto) {
         Employee employee = employeeService.createEmployee(dto);
         return new ResponseEntity<>(employee, HttpStatus.CREATED);

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+
 @RestController
 @RequestMapping("/api/salary")
 @RequiredArgsConstructor
@@ -60,4 +61,13 @@ public class SalaryController {
 
         return ResponseEntity.ok(selected);
     }
+
+
+
+// GET: Salary report / summary of salaries already paid by the company
+    @GetMapping("/paid-report")
+    public ResponseEntity<List<SalaryPaymentRecordDTO>> getPaidSalaryReport() {
+        return ResponseEntity.ok(salaryService.getPaidSalaryReport());
+ }
+
 }

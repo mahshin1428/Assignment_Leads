@@ -9,42 +9,37 @@ import lombok.*;
 @Getter
 @Setter
 @Entity
-@Table(name = "employees")
-
-@NoArgsConstructor //create an employee object by jackson
+@Table(name = "employe")
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Employee {
 
     @Id
-    @Column(length = 4, unique = true)
-    @Pattern(regexp = "\\d{4}", message = "Employee ID must be exactly 4 digits")
+    @Column(name = "EMPLOYEE_ID", length = 4, unique = true)
     private String employeeId;
 
     @NotBlank(message = "Name is required")
-    @Column(nullable = false)
+    @Column(name = "NAME", nullable = false)
     private String name;
 
     @Min(value = 1, message = "Grade must be between 1 and 6")
     @Max(value = 6, message = "Grade must be between 1 and 6")
-    @Column(nullable = false)
+    @Column(name = "GRADE", nullable = false)
     private Integer grade;
 
     @NotBlank(message = "Address is required")
-    @Column(nullable = false)
+    @Column(name = "ADDRESS", nullable = false)
     private String address;
 
     @NotBlank(message = "Mobile number is required")
-    @Pattern(regexp = "^[0-9]{10,15}$", message = "Mobile number must be 10-15 digits")
-    @Column(nullable = false)
+    @Column(name = "MOBILE_NUMBER", nullable = false)
     private String mobileNumber;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "id", referencedColumnName = "id")
-    @JsonManagedReference // This tells Jackson: serialize this side normally
+    @JoinColumn(name = "ID", referencedColumnName = "ID")
+    @JsonManagedReference
     private BankAccount bankAccount;
-
-
 
     @Transient
     private Double basicSalary;
@@ -57,6 +52,4 @@ public class Employee {
 
     @Transient
     private Double totalSalary;
-
-
 }
